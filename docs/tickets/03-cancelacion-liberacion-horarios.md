@@ -5,10 +5,10 @@ Operación de cancelación de reservas existentes. Cambia el estado a `CANCELLED
 
 **Blocked by:** 02: Creación de Reservas y Motor de Superposiciones
 
-**Status:** ready-for-agent
+**Status:** completed
 
-- [ ] Operación de cancelación por ID de reserva con validación de existencia.
-- [ ] Validación de estado: no permitir cancelar una reserva ya cancelada.
-- [ ] Preservación intacta del registro histórico en SQLite (cambio exclusivo de estado a `CANCELLED`).
-- [ ] Liberación instantánea del intervalo en el cálculo de disponibilidad.
-- [ ] Pruebas automatizadas del ciclo de vida: crear -> cancelar -> verificar disponibilidad -> nueva reserva sobre el intervalo liberado.
+- [x] Operación de cancelación por ID de reserva con validación de existencia.
+- [x] Validación de estado: no permitir cancelar una reserva ya cancelada.
+- [x] Preservación intacta del registro histórico en SQLite (cambio exclusivo de estado a `CANCELLED`).
+- [x] Liberación instantánea del intervalo en el cálculo de disponibilidad.
+- [x] Pruebas automatizadas del ciclo de vida: crear -> cancelar -> verificar disponibilidad -> nueva reserva sobre el intervalo liberado.
