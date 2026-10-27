@@ -6,6 +6,11 @@ node_modules/
 # Environment & Logs
 .env
 *.log
+dist/
+data/*.db
+data/*.db-journal
+data/*.db-wal
+data/*.sqlite
 
 # OS generated files
 .DS_Store

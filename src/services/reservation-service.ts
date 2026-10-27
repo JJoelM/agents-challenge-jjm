@@ -49,6 +49,8 @@ export class ReservationService {
     }
 
     validateInterval(startTime, endTime);
+    const normalizedStart = startTime.trim();
+    const normalizedEnd = endTime.trim();
 
     const stmt = this.db.getRawDb().prepare(`
       SELECT * FROM reservations
@@ -57,13 +59,13 @@ export class ReservationService {
     const rows = stmt.all(unitId) as unknown as RawReservationRow[];
 
     for (const row of rows) {
-      if (doIntervalsOverlap(startTime, endTime, row.start_time, row.end_time)) {
+      if (doIntervalsOverlap(normalizedStart, normalizedEnd, row.start_time, row.end_time)) {
         const conflicting = mapRowToReservation(row);
         return {
           available: false,
           unitId,
-          startTime,
-          endTime,
+          startTime: normalizedStart,
+          endTime: normalizedEnd,
           reason: `Superposición con la reserva activa ${conflicting.id} (${conflicting.startTime} a ${conflicting.endTime}).`,
           conflictingReservation: conflicting,
         };
@@ -73,8 +75,8 @@ export class ReservationService {
     return {
       available: true,
       unitId,
-      startTime,
-      endTime,
+      startTime: normalizedStart,
+      endTime: normalizedEnd,
     };
   }
 
@@ -87,8 +89,10 @@ export class ReservationService {
 
     const requester = validateRequester(dto.requester);
     validateInterval(startTime, endTime);
+    const normalizedStart = startTime.trim();
+    const normalizedEnd = endTime.trim();
 
-    const availability = this.checkAvailability(unitId, startTime, endTime);
+    const availability = this.checkAvailability(unitId, normalizedStart, normalizedEnd);
     if (!availability.available) {
       throw new Error(availability.reason ?? 'El intervalo no está disponible para esta unidad.');
     }
@@ -101,37 +105,43 @@ export class ReservationService {
       VALUES (?, ?, ?, ?, ?, 'ACTIVE', ?)
     `);
 
-    insertStmt.run(nextId, unitId, requester, startTime, endTime, createdAt);
+    insertStmt.run(nextId, unitId, requester, normalizedStart, normalizedEnd, createdAt);
 
     return {
       id: nextId,
       unitId,
       requester,
-      startTime,
-      endTime,
+      startTime: normalizedStart,
+      endTime: normalizedEnd,
       status: 'ACTIVE',
       createdAt,
     };
   }
 
   public cancelReservation(reservationId: string): Reservation {
+    if (!reservationId || typeof reservationId !== 'string' || reservationId.trim().length === 0) {
+      throw new Error('El identificador de la reserva no puede estar vacío.');
+    }
+
+    const normalizedId = reservationId.trim();
+
     const findStmt = this.db.getRawDb().prepare(`
       SELECT * FROM reservations WHERE id = ?
     `);
-    const row = findStmt.get(reservationId) as unknown as RawReservationRow | undefined;
+    const row = findStmt.get(normalizedId) as unknown as RawReservationRow | undefined;
 
     if (!row) {
-      throw new Error(`No se encontró ninguna reserva con el identificador '${reservationId}'.`);
+      throw new Error(`No se encontró ninguna reserva con el identificador '${normalizedId}'.`);
     }
 
     if (row.status === 'CANCELLED') {
-      throw new Error(`La reserva '${reservationId}' ya se encuentra cancelada.`);
+      throw new Error(`La reserva '${normalizedId}' ya se encuentra cancelada.`);
     }
 
     const updateStmt = this.db.getRawDb().prepare(`
       UPDATE reservations SET status = 'CANCELLED' WHERE id = ?
     `);
-    updateStmt.run(reservationId);
+    updateStmt.run(normalizedId);
 
     return {
       id: row.id,
@@ -177,13 +187,17 @@ export class ReservationService {
     return row ? mapRowToReservation(row) : null;
   }
 
+  public resetAll(): void {
+    this.db.exec('DELETE FROM reservations');
+  }
+
   private generateNextId(): string {
     const stmt = this.db.getRawDb().prepare(`
-      SELECT COUNT(*) as count FROM reservations
+      SELECT MAX(CAST(SUBSTR(id, 5) AS INTEGER)) as max_num, COUNT(*) as count FROM reservations
     `);
-    const result = stmt.get() as unknown as { count: number };
-    const count = result?.count ?? 0;
-    const nextNumber = count + 1;
+    const result = stmt.get() as unknown as { max_num: number | null; count: number };
+    const base = Math.max(result?.max_num ?? 0, result?.count ?? 0);
+    const nextNumber = base + 1;
     return `RES-${String(nextNumber).padStart(3, '0')}`;
   }
 }
