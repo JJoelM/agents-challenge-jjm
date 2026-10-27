@@ -7,6 +7,7 @@
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
+  <!-- Nivel 1: Header Ejecutivo -->
   <header class="app-header">
     <div class="container header-content">
       <div class="brand">
@@ -18,12 +19,12 @@
       </div>
       <div class="header-actions">
         <span id="system-status" class="status-pill status-online" role="status">
-          <span class="dot"></span> SQLite Persistente Activo
+          <span class="dot"></span> Online · SQLite Persistente
         </span>
-        <button id="btn-refresh" type="button" class="btn btn-secondary">
+        <button id="btn-refresh" type="button" class="btn btn-secondary-dark">
           Actualizar datos
         </button>
-        <button id="btn-reset-db" type="button" class="btn btn-danger-outline" title="Elimina todas las reservas de prueba">
+        <button id="btn-reset-db" type="button" class="btn btn-danger-outline">
           Reiniciar BD
         </button>
       </div>
@@ -31,161 +32,358 @@
   </header>
 
   <main class="container main-layout">
-    <!-- Catálogo de Inventario Precargado -->
-    <section class="card inventory-section" aria-labelledby="inventory-heading">
-      <div class="section-header">
-        <div>
-          <h2 id="inventory-heading">Catálogo de Equipos del Laboratorio</h2>
-          <p class="section-desc">Inventario fijo de unidades físicas independientes. Haga clic en una unidad para seleccionarla en los formularios.</p>
-        </div>
-        <span class="badge-count" id="inventory-count">5 unidades</span>
-      </div>
-      <div id="inventory-grid" class="inventory-grid" role="list">
-        <!-- Renderizado dinámicamente por app.js -->
-      </div>
+    <!-- Nivel 2: Barra de Métricas Ejecutivas (KPIs) -->
+    <section class="kpi-strip" aria-label="Resumen operativo del laboratorio">
+      <article class="kpi-card">
+        <span class="kpi-label">Catálogo de Equipos</span>
+        <strong class="kpi-value" id="kpi-total-units">5 Equipos Físicos</strong>
+        <span class="kpi-sub">Unidades independientes precargadas</span>
+      </article>
+      <article class="kpi-card kpi-card-active">
+        <span class="kpi-label">Reservas Activas</span>
+        <strong class="kpi-value" id="kpi-active-count">0</strong>
+        <span class="kpi-sub">Turnos vigentes que bloquean horario</span>
+      </article>
+      <article class="kpi-card kpi-card-cancelled">
+        <span class="kpi-label">Reservas Canceladas</span>
+        <strong class="kpi-value" id="kpi-cancelled-count">0</strong>
+        <span class="kpi-sub">Turnos liberados con trazabilidad</span>
+      </article>
+      <article class="kpi-card kpi-card-selected">
+        <span class="kpi-label">Unidad Seleccionada</span>
+        <strong class="kpi-value kpi-mono" id="kpi-selected-unit">MIC-01</strong>
+        <span class="kpi-sub" id="kpi-selected-name">Microscopio digital</span>
+      </article>
     </section>
 
-    <!-- Paneles Operativos: Disponibilidad y Nueva Reserva -->
-    <div class="operations-grid">
-      <!-- Panel 1: Consulta de Disponibilidad -->
-      <section class="card" aria-labelledby="availability-heading">
-        <div class="section-header">
-          <div>
-            <h2 id="availability-heading">Consulta de Disponibilidad</h2>
-            <p class="section-desc">Verifique si una unidad física está libre en un intervalo semiabierto <code>[inicio, fin)</code>.</p>
+    <!-- Nivel 3: Navegación Principal por Pestañas (Tabs) -->
+    <div class="workspace-shell">
+      <nav class="tabs-nav" aria-label="Vistas principales del sistema">
+        <ul class="tab-list" role="tablist">
+          <li class="tab-item active" role="presentation">
+            <button
+              type="button"
+              role="tab"
+              id="tab-btn-catalog"
+              class="tab-trigger"
+              aria-selected="true"
+              aria-controls="panel-catalog"
+              tabindex="0"
+              data-tab-target="panel-catalog"
+            >
+              <span class="tab-step">1</span>
+              <span>Catálogo y Disponibilidad</span>
+            </button>
+          </li>
+          <li class="tab-item" role="presentation">
+            <button
+              type="button"
+              role="tab"
+              id="tab-btn-create"
+              class="tab-trigger"
+              aria-selected="false"
+              aria-controls="panel-create"
+              tabindex="-1"
+              data-tab-target="panel-create"
+            >
+              <span class="tab-step">2</span>
+              <span>Nueva Reserva</span>
+            </button>
+          </li>
+          <li class="tab-item" role="presentation">
+            <button
+              type="button"
+              role="tab"
+              id="tab-btn-history"
+              class="tab-trigger"
+              aria-selected="false"
+              aria-controls="panel-history"
+              tabindex="-1"
+              data-tab-target="panel-history"
+            >
+              <span class="tab-step">3</span>
+              <span>Historial y Auditoría</span>
+              <span id="tab-badge-total" class="tab-counter">0</span>
+            </button>
+          </li>
+        </ul>
+      </nav>
+
+      <!-- Notificación Global Contextual -->
+      <div id="global-toast" class="feedback-box hidden" role="status" aria-live="polite"></div>
+
+      <!-- PESTAÑA 1: Catálogo de Equipos + Verificador de Disponibilidad -->
+      <section
+        id="panel-catalog"
+        class="tab-panel"
+        role="tabpanel"
+        aria-labelledby="tab-btn-catalog"
+      >
+        <div class="catalog-split-layout">
+          <!-- Sub-bloque A: Catálogo de Equipos del Laboratorio -->
+          <div class="card">
+            <div class="section-header">
+              <div>
+                <span class="eyebrow">Inventario Fijo de Precisión</span>
+                <h2 id="inventory-heading">Catálogo de Equipos del Laboratorio</h2>
+                <p class="section-desc">
+                  Seleccione una unidad física para inspeccionar su carga o saltar directamente a reservarla.
+                </p>
+              </div>
+              <span class="badge-count" id="inventory-count">5 unidades</span>
+            </div>
+
+            <div id="inventory-grid" class="inventory-grid" role="list">
+              <!-- Tarjetas generadas dinámicamente por app.js -->
+            </div>
+          </div>
+
+          <!-- Sub-bloque B: Verificador de Disponibilidad por Intervalo -->
+          <div class="card availability-panel">
+            <div class="section-header">
+              <div>
+                <span class="eyebrow">Consulta en Tiempo Real</span>
+                <h2 id="availability-heading">Verificador de Disponibilidad</h2>
+                <p class="section-desc">
+                  Compruebe si una unidad está libre en un intervalo semiabierto <code>[inicio, fin)</code>.
+                </p>
+              </div>
+            </div>
+
+            <form id="form-availability" class="form-stack">
+              <div class="form-group">
+                <label for="avail-unit">Unidad de Equipo a Consultar</label>
+                <select id="avail-unit" name="unitId" required></select>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="avail-start">Inicio del intervalo</label>
+                  <input type="datetime-local" id="avail-start" name="start" required />
+                </div>
+                <div class="form-group">
+                  <label for="avail-end">Fin del intervalo</label>
+                  <input type="datetime-local" id="avail-end" name="end" required />
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn btn-primary">Consultar Disponibilidad</button>
+                <button type="button" id="btn-copy-to-reserve" class="btn btn-secondary">
+                  Llevar horario a Nueva Reserva →
+                </button>
+              </div>
+            </form>
+
+            <div id="availability-feedback" class="feedback-box hidden" role="region" aria-live="polite"></div>
           </div>
         </div>
-
-        <form id="form-availability" class="form-stack">
-          <div class="form-group">
-            <label for="avail-unit">Unidad de Equipo</label>
-            <select id="avail-unit" name="unitId" required></select>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="avail-start">Inicio del turno</label>
-              <input type="datetime-local" id="avail-start" name="start" required />
-            </div>
-            <div class="form-group">
-              <label for="avail-end">Fin del turno</label>
-              <input type="datetime-local" id="avail-end" name="end" required />
-            </div>
-          </div>
-
-          <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Consultar Disponibilidad</button>
-            <button type="button" id="btn-copy-to-reserve" class="btn btn-secondary">Usar este horario para reservar</button>
-          </div>
-        </form>
-
-        <div id="availability-feedback" class="feedback-box hidden" role="region" aria-live="polite"></div>
       </section>
 
-      <!-- Panel 2: Nueva Reserva -->
-      <section class="card" aria-labelledby="reservation-heading">
-        <div class="section-header">
-          <div>
-            <h2 id="reservation-heading">Registrar Nueva Reserva</h2>
-            <p class="section-desc">Asigne una unidad a un solicitante. Duración permitida: entre 15 minutos y 24 horas.</p>
+      <!-- PESTAÑA 2: Registrar Nueva Reserva -->
+      <section
+        id="panel-create"
+        class="tab-panel"
+        role="tabpanel"
+        aria-labelledby="tab-btn-create"
+        hidden
+      >
+        <div class="create-split-layout">
+          <!-- Formulario Principal de Reserva -->
+          <div class="card">
+            <div class="section-header">
+              <div>
+                <span class="eyebrow">Asignación Exclusiva de Recurso</span>
+                <h2 id="reservation-heading">Registrar Nueva Reserva</h2>
+                <p class="section-desc">
+                  Complete los datos del préstamo. El sistema validará automáticamente que no existan colisiones horarias.
+                </p>
+              </div>
+              <span id="duration-indicator" class="badge-duration">Duración: 60 min (1.0 h)</span>
+            </div>
+
+            <form id="form-reservation" class="form-stack">
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="res-unit">Unidad Física de Equipo</label>
+                  <select id="res-unit" name="unitId" required></select>
+                </div>
+                <div class="form-group">
+                  <label for="res-requester">Solicitante (Investigador / Docente)</label>
+                  <input
+                    type="text"
+                    id="res-requester"
+                    name="requester"
+                    placeholder="Ej. Dra. Ana García"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="res-start">Inicio de la Reserva</label>
+                  <input type="datetime-local" id="res-start" name="startTime" required />
+                </div>
+                <div class="form-group">
+                  <label for="res-end">Fin de la Reserva</label>
+                  <input type="datetime-local" id="res-end" name="endTime" required />
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" class="btn btn-success btn-lg">Confirmar Reserva</button>
+                <button type="button" id="btn-check-from-create" class="btn btn-secondary">
+                  Verificar disponibilidad antes de guardar
+                </button>
+              </div>
+            </form>
+
+            <div id="reservation-feedback" class="feedback-box hidden" role="alert" aria-live="assertive"></div>
+          </div>
+
+          <!-- Panel Lateral: Escenarios de Prueba y Reglas de Dominio -->
+          <aside class="card scenarios-sidebar" aria-label="Escenarios rápidos y reglas de validación">
+            <span class="eyebrow">Asistente de Pruebas</span>
+            <h3>Escenarios Rápidos de Laboratorio</h3>
+            <p class="section-desc">
+              Cargue con un clic casos representativos para verificar las reglas de negocio del dominio:
+            </p>
+
+            <div class="preset-stack">
+              <button type="button" class="preset-card" data-preset="1">
+                <div class="preset-card-top">
+                  <span class="preset-tag tag-valid">Caso 1 · Base Válida</span>
+                  <code>MIC-01</code>
+                </div>
+                <strong>Dra. García · 10:00 a 11:00</strong>
+                <span>Reserva estándar de 60 minutos.</span>
+              </button>
+
+              <button type="button" class="preset-card" data-preset="2">
+                <div class="preset-card-top">
+                  <span class="preset-tag tag-valid">Caso 2 · Límite Consecutivo</span>
+                  <code>MIC-01</code>
+                </div>
+                <strong>Ing. Pérez · 11:00 a 12:00</strong>
+                <span>Contiguo exacto (fin = inicio). Permitido sin conflicto.</span>
+              </button>
+
+              <button type="button" class="preset-card" data-preset="3">
+                <div class="preset-card-top">
+                  <span class="preset-tag tag-conflict">Caso 3 · Superposición (409)</span>
+                  <code>MIC-01</code>
+                </div>
+                <strong>Dr. López · 10:30 a 11:30</strong>
+                <span>Solapa parcialmente el turno de 10:00–11:00. Debe rechazarse.</span>
+              </button>
+
+              <button type="button" class="preset-card" data-preset="4">
+                <div class="preset-card-top">
+                  <span class="preset-tag tag-valid">Caso 4 · Unidad Distinta</span>
+                  <code>MIC-02</code>
+                </div>
+                <strong>Lic. Torres · 10:00 a 11:00</strong>
+                <span>Mismo horario pero en unidad física independiente.</span>
+              </button>
+            </div>
+
+            <div class="rules-summary">
+              <h4>Invariantes Activas</h4>
+              <ul>
+                <li>Intervalo semiabierto <code>[inicio, fin)</code>.</li>
+                <li>Duración mínima: <strong>15 min</strong> · máxima: <strong>24 h</strong>.</li>
+                <li>IDs correlativos deterministas (<code>RES-001</code>, ...).</li>
+              </ul>
+            </div>
+          </aside>
+        </div>
+      </section>
+
+      <!-- PESTAÑA 3: Historial y Auditoría de Reservas -->
+      <section
+        id="panel-history"
+        class="tab-panel"
+        role="tabpanel"
+        aria-labelledby="tab-btn-history"
+        hidden
+      >
+        <div class="card">
+          <div class="section-header history-header">
+            <div>
+              <span class="eyebrow">Registro Persistente e Inmutable</span>
+              <h2 id="history-heading">Historial y Trazabilidad de Reservas</h2>
+              <p class="section-desc">
+                Las reservas canceladas cambian a estado <code>CANCELLED</code>, liberan el horario de inmediato y conservan su registro histórico.
+              </p>
+            </div>
+
+            <search aria-label="Filtros del historial de reservas" class="filters-bar">
+              <div class="filter-item">
+                <label for="filter-unit">Unidad:</label>
+                <select id="filter-unit">
+                  <option value="">Todas las unidades</option>
+                </select>
+              </div>
+              <div class="filter-item">
+                <label for="filter-status">Estado:</label>
+                <select id="filter-status">
+                  <option value="">Todas (Activas y Canceladas)</option>
+                  <option value="ACTIVE">Solo Activas (ACTIVE)</option>
+                  <option value="CANCELLED">Solo Canceladas (CANCELLED)</option>
+                </select>
+              </div>
+              <button type="button" id="btn-go-new-from-history" class="btn btn-primary">
+                + Nueva Reserva
+              </button>
+            </search>
+          </div>
+
+          <div id="table-feedback" class="feedback-box hidden" role="status" aria-live="polite"></div>
+
+          <div class="table-container">
+            <table class="reservations-table" aria-label="Tabla histórica de reservas">
+              <thead>
+                <tr>
+                  <th scope="col">ID</th>
+                  <th scope="col">Unidad</th>
+                  <th scope="col">Solicitante</th>
+                  <th scope="col">Inicio</th>
+                  <th scope="col">Fin</th>
+                  <th scope="col">Estado</th>
+                  <th scope="col" class="col-actions">Acción</th>
+                </tr>
+              </thead>
+              <tbody id="reservations-tbody">
+                <tr>
+                  <td colspan="7" class="empty-row">Cargando reservas...</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
-
-        <div class="quick-presets">
-          <span class="preset-label">Autocompletar ejemplo:</span>
-          <button type="button" class="btn-chip" data-preset="1">Dra. García (10:00 - 11:00)</button>
-          <button type="button" class="btn-chip" data-preset="2">Ing. Pérez (11:00 - 12:00 Consecutivo)</button>
-          <button type="button" class="btn-chip" data-preset="3">Dr. López (10:30 - 11:30 Conflicto)</button>
-        </div>
-
-        <form id="form-reservation" class="form-stack">
-          <div class="form-row">
-            <div class="form-group">
-              <label for="res-unit">Unidad de Equipo</label>
-              <select id="res-unit" name="unitId" required></select>
-            </div>
-            <div class="form-group">
-              <label for="res-requester">Solicitante (investigador / docente)</label>
-              <input
-                type="text"
-                id="res-requester"
-                name="requester"
-                placeholder="Ej. Dra. Ana García"
-                required
-              />
-            </div>
-          </div>
-
-          <div class="form-row">
-            <div class="form-group">
-              <label for="res-start">Inicio de reserva</label>
-              <input type="datetime-local" id="res-start" name="startTime" required />
-            </div>
-            <div class="form-group">
-              <label for="res-end">Fin de reserva</label>
-              <input type="datetime-local" id="res-end" name="endTime" required />
-            </div>
-          </div>
-
-          <div class="form-actions">
-            <button type="submit" class="btn btn-success">Confirmar Reserva</button>
-          </div>
-        </form>
-
-        <div id="reservation-feedback" class="feedback-box hidden" role="alert" aria-live="assertive"></div>
       </section>
     </div>
-
-    <!-- Tabla de Historial y Trazabilidad -->
-    <section class="card history-section" aria-labelledby="history-heading">
-      <div class="section-header history-header">
-        <div>
-          <h2 id="history-heading">Historial y Trazabilidad de Reservas</h2>
-          <p class="section-desc">Registro persistente de reservas activas y canceladas. Cancelar libera inmediatamente el intervalo horario conservando el registro histórico.</p>
-        </div>
-
-        <div class="filters-bar">
-          <div class="filter-item">
-            <label for="filter-unit">Filtrar por unidad:</label>
-            <select id="filter-unit">
-              <option value="">Todas las unidades</option>
-            </select>
-          </div>
-          <div class="filter-item">
-            <label for="filter-status">Estado:</label>
-            <select id="filter-status">
-              <option value="">Todas (Activas y Canceladas)</option>
-              <option value="ACTIVE">Solo Activas (ACTIVE)</option>
-              <option value="CANCELLED">Solo Canceladas (CANCELLED)</option>
-            </select>
-          </div>
-        </div>
-      </div>
-
-      <div id="table-feedback" class="feedback-box hidden" role="status" aria-live="polite"></div>
-
-      <div class="table-container">
-        <table class="reservations-table" aria-label="Tabla histórica de reservas">
-          <thead>
-            <tr>
-              <th scope="col">ID</th>
-              <th scope="col">Unidad</th>
-              <th scope="col">Solicitante</th>
-              <th scope="col">Inicio</th>
-              <th scope="col">Fin</th>
-              <th scope="col">Estado</th>
-              <th scope="col" class="col-actions">Acción</th>
-            </tr>
-          </thead>
-          <tbody id="reservations-tbody">
-            <tr>
-              <td colspan="7" class="empty-row">Cargando reservas...</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
   </main>
+
+  <!-- Diálogo Modal Nativo para Confirmaciones Críticas -->
+  <dialog id="confirm-dialog" class="modal-dialog" aria-labelledby="dialog-title">
+    <form method="dialog" class="modal-content">
+      <div class="modal-header">
+        <span class="eyebrow eyebrow-danger" id="dialog-eyebrow">Confirmación de Operación</span>
+        <h3 id="dialog-title">¿Confirmar acción?</h3>
+      </div>
+      <p id="dialog-description" class="modal-body">
+        Esta operación actualizará el estado en la base de datos SQLite local.
+      </p>
+      <div class="modal-actions">
+        <button type="submit" value="cancel" class="btn btn-secondary">Volver</button>
+        <button type="submit" value="confirm" id="dialog-confirm-btn" class="btn btn-danger">
+          Confirmar
+        </button>
+      </div>
+    </form>
+  </dialog>
 
   <footer class="app-footer">
     <div class="container footer-content">
