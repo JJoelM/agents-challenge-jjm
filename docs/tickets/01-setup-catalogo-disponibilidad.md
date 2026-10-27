@@ -5,10 +5,10 @@ Configuración inicial del entorno TypeScript/Node.js con Vitest y SQLite embebi
 
 **Blocked by:** None (can start immediately)
 
-**Status:** ready-for-agent
+**Status:** completed
 
-- [ ] Configurar `package.json`, `tsconfig.json` y `vitest.config.ts`.
-- [ ] Implementar catálogo inmutable con los 5 equipos de laboratorio precargados.
-- [ ] Implementar inicialización de base de datos SQLite y tabla `reservations`.
-- [ ] Implementar servicio o función de consulta de disponibilidad por unidad e intervalo.
-- [ ] Implementar pruebas unitarias que verifiquen el inventario precargado y la disponibilidad en ausencia de reservas.
+- [x] Configurar `package.json`, `tsconfig.json` y `vitest.config.ts`.
+- [x] Implementar catálogo inmutable con los 5 equipos de laboratorio precargados.
+- [x] Implementar inicialización de base de datos SQLite y tabla `reservations`.
+- [x] Implementar servicio o función de consulta de disponibilidad por unidad e intervalo.
+- [x] Implementar pruebas unitarias que verifiquen el inventario precargado y la disponibilidad en ausencia de reservas.
