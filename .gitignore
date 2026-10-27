@@ -1,0 +1,12 @@
+# Dependencies & Skills
+.agents/
+skills-lock.json
+node_modules/
+
+# Environment & Logs
+.env
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
