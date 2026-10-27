@@ -1,0 +1,20 @@
+{
+  "name": "lab-reservation-system",
+  "version": "1.0.0",
+  "description": "Sistema de reservas de laboratorio con agentes",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "start": "tsx src/server.ts",
+    "dev": "tsx watch src/server.ts",
+    "db:reset": "tsx src/scripts/reset-db.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.1",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}
