@@ -20,12 +20,54 @@ export interface CreateReservationDTO {
 export const MIN_DURATION_MINUTES = 15;
 export const MAX_DURATION_HOURS = 24;
 
+const ISO_DATE_TIME_REGEX =
+  /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.\d{1,3})?)?(?:Z|[+-]\d{2}:\d{2})?$/;
+
 export function parseAndValidateIsoDate(isoString: string, fieldName: string): Date {
   if (!isoString || typeof isoString !== 'string') {
     throw new Error(`El campo '${fieldName}' debe ser una cadena de fecha válida.`);
   }
 
-  const date = new Date(isoString);
+  const trimmed = isoString.trim();
+  const match = ISO_DATE_TIME_REGEX.exec(trimmed);
+  if (!match) {
+    throw new Error(`El campo '${fieldName}' (${isoString}) no es una fecha válida en formato ISO.`);
+  }
+
+  const year = Number(match[1]);
+  const month = Number(match[2]);
+  const day = Number(match[3]);
+  const hour = Number(match[4]);
+  const minute = Number(match[5]);
+  const second = match[6] !== undefined ? Number(match[6]) : 0;
+
+  if (
+    month < 1 ||
+    month > 12 ||
+    day < 1 ||
+    day > 31 ||
+    hour < 0 ||
+    hour > 23 ||
+    minute < 0 ||
+    minute > 59 ||
+    second < 0 ||
+    second > 59
+  ) {
+    throw new Error(`El campo '${fieldName}' (${isoString}) no es una fecha válida en formato ISO.`);
+  }
+
+  const calendarCheck = new Date(Date.UTC(year, month - 1, day));
+  if (
+    calendarCheck.getUTCFullYear() !== year ||
+    calendarCheck.getUTCMonth() !== month - 1 ||
+    calendarCheck.getUTCDate() !== day
+  ) {
+    throw new Error(
+      `El campo '${fieldName}' (${isoString}) no es una fecha válida en formato ISO (fecha calendario inexistente).`
+    );
+  }
+
+  const date = new Date(trimmed);
   if (isNaN(date.getTime())) {
     throw new Error(`El campo '${fieldName}' (${isoString}) no es una fecha válida en formato ISO.`);
   }

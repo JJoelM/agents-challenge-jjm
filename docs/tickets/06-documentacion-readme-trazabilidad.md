@@ -5,10 +5,10 @@ Redacción del archivo `README.md` como punto de entrada según los requisitos e
 
 **Blocked by:** 04: Interfaz Web Local Liviana, 05: Verificación de Persistencia tras Reinicio
 
-**Status:** ready-for-agent
+**Status:** completed
 
-- [ ] Sección 1 del README: Problema, alcance, requisitos verificables, reglas, supuestos y criterios de aceptación.
-- [ ] Sección 2 del README: Estructura, decisiones técnicas, instalación, carga inicial y reinicio de datos, comandos de ejecución y test, ejemplos de entrada/salida, limitaciones y ubicación de persistencia.
-- [ ] Sección 3 del README: Harness Gentle AI, modelo, contexto suministrado, exclusiones, permisos y adaptación específica comprobable.
-- [ ] Sección 4 del README: Registro de 3 episodios reales de delegación (Objetivo -> Contexto e instrucción -> Acción del agente -> Decisión humana con motivo -> Enlace a commit/prueba).
-- [ ] Sincronización final de `memory/` (Obsidian Vault).
+- [x] Sección 1 del README: Problema, alcance, requisitos verificables, reglas, supuestos y criterios de aceptación.
+- [x] Sección 2 del README: Estructura, decisiones técnicas, instalación, carga inicial y reinicio de datos, comandos de ejecución y test, ejemplos de entrada/salida, limitaciones y ubicación de persistencia.
+- [x] Sección 3 del README: Harness Gentle AI, modelo, contexto suministrado, exclusiones, permisos y adaptación específica comprobable.
+- [x] Sección 4 del README: Registro de 3 episodios reales de delegación (Objetivo -> Contexto e instrucción -> Acción del agente -> Decisión humana con motivo -> Enlace a commit/prueba).
+- [x] Sincronización final de `memory/` (Obsidian Vault).

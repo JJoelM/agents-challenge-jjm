@@ -162,16 +162,33 @@ De acuerdo a los requisitos del desafío, se implementará una suite de pruebas 
 ## 8. Registro de Preparación del Agente y Episodios de Delegación
 
 ### 8.1 Harness y Configuración del Agente
-- **Entorno / Harness:** Google Antigravity Coding Agent Harness.
-- **Identificador de Modelo:** `gemini-3.8-flash` (Medium reasoning capability).
-- **Herramientas permitidas:** Edición y lectura de archivos de workspace, terminal PowerShell local (`run_command`), interacción guiada con el usuario (`ask_question`).
-- **Contexto suministrado:** Consigna oficial `challenge-agents.pdf` y repositorio local.
-- **Exclusiones:** Sin acceso a servicios pagos externos ni credenciales privadas.
+- **Entorno / Harness:** Google Antigravity Coding Agent Harness gobernado por el **Harness de Gentle AI** ([`AGENTS.md`](../AGENTS.md)).
+- **Identificadores de Modelos:**
+  - `Gemini 3.8 Flash (Medium)`: Fase inicial (instalación de skills, sesiones de `/grill-me`, `/grill-with-docs`, especificación, bóveda Obsidian, `/to-tickets` y scaffolding `TICKET-01`).
+  - `Gemini 4 Argon (Medium)`: Fase de orquestación multi-agente e implementación TDD (`TICKET-02` a `TICKET-06`).
+- **Herramientas permitidas:** Edición y lectura de archivos de workspace, terminal PowerShell local (`run_command`), interacción guiada con el usuario y delegación en subagentes (`domain-tdd-agent`, `web-fullstack-agent`, `docs-memory-agent`).
+- **Contexto suministrado:** Consigna oficial `challenge-agents.pdf`, `AGENTS.md`, `memory/index.md` y repositorio local.
+- **Exclusiones:** Sin acceso a servicios pagos externos, sin credenciales ni datos personales reales; directorio `.agents/` y `skills-lock.json` excluidos en `.gitignore`.
 
 ### 8.2 Episodios Reales de Delegación
-#### Episodio 1: Especificación y Modelado de Dominio (Grill-me & Grill-with-docs)
-- **Objetivo y requisito:** Extraer requisitos de `challenge-agents.pdf`, definir glosario del dominio, resolver disyuntivas técnicas e implementar guardas de control en `.gitignore`.
-- **Contexto suministrado e instrucción:** Conexión con skills `grill-me`, `grill-with-docs` y consigna en PDF; solicitud de consolidar especificación y `.gitignore`.
-- **Acción/resultado del agente:** Instaló catálogo de skills de `mattpocock/skills`, configuró `.gitignore` ignorando `.agents/` y `skills-lock.json`, formuló preguntas interactivas paso a paso para resolver las disyuntivas arquitectónicas y redactó el documento consolidado `docs/especificacion-diseno.md`.
-- **Decisión humana:** Aprobación de las decisiones: TypeScript/Node.js, SQLite embebido, interfaz web local liviana y formato secuencial de IDs `RES-xxx`.
-- **Evidencia verificable:** Commit y archivo [docs/especificacion-diseno.md](file:///e:/MIO/Facu/5to/Ing3/TP-ChallengeAgentes-Marcori/docs/especificacion-diseno.md) y [.gitignore](file:///e:/MIO/Facu/5to/Ing3/TP-ChallengeAgentes-Marcori/.gitignore).
+
+#### Episodio 1: Especificación, Modelo de Dominio y Desglose en Tickets (`/grill-me`, `/grill-with-docs`, `/to-tickets`)
+- **Objetivo y requisito:** Extraer requisitos de `challenge-agents.pdf`, definir glosario del dominio, resolver disyuntivas técnicas (ADRs 001–005), configurar `.gitignore` y desglosar en tickets incrementales.
+- **Contexto suministrado e instrucción:** Conexión con skills `grill-me`, `grill-with-docs` y `to-tickets` sobre `challenge-agents.pdf`; solicitud de consolidar especificación, bóveda Obsidian y plan de tickets.
+- **Acción/resultado del agente:** Instaló el catálogo de skills de `mattpocock/skills`, configuró `.gitignore` ignorando `.agents/` y `skills-lock.json`, formuló preguntas interactivas paso a paso para resolver las disyuntivas arquitectónicas, redactó `docs/especificacion-diseno.md`, inicializó `memory/` y creó los 6 tickets en `docs/tickets/`.
+- **Decisión humana:** Aprobación de las decisiones: TypeScript/Node.js + Vitest, SQLite embebido (`node:sqlite`), interfaz web local liviana, fechas ISO libres de reloj actual para determinismo de pruebas y formato secuencial `RES-xxx`.
+- **Evidencia verificable:** [`docs/especificacion-diseno.md`](especificacion-diseno.md), [`docs/tickets/index.md`](tickets/index.md), [`AGENTS.md`](../AGENTS.md) y [`.gitignore`](../.gitignore).
+
+#### Episodio 2: Delegación en `domain-tdd-agent` para Reglas de Dominio, Superposiciones, Cancelación y Persistencia (`TICKET-02`, `TICKET-03`, `TICKET-05`)
+- **Objetivo y requisito:** Implementar bajo TDD estricto las validaciones de dominio, la lógica de intervalos semiabiertos $[inicio, fin)$, la creación/cancelación en `ReservationService` sobre SQLite y la prueba de persistencia tras cerrar y reabrir la base de datos.
+- **Contexto suministrado e instrucción:** Especificación de dominio (`docs/especificacion-diseno.md`), `src/domain/*`, `src/db/database.ts` e instrucción de implementar `src/services/reservation-service.ts`, `src/scripts/reset-db.ts` y las suites `tests/reservation-creation.test.ts`, `tests/reservation-cancellation.test.ts` y `tests/persistence-restart.test.ts` sin ejecutar comandos git.
+- **Acción/resultado del agente:** Implementó `ReservationService`, agregó validación estricta de fechas calendario inexistentes (`2026-02-30`) en `src/domain/reservation.ts`, el script `src/scripts/reset-db.ts` y 20 tests automatizados en Vitest.
+- **Decisión humana / del arquitecto:** Se aceptó la implementación y se aplicó un refinamiento en `src/services/reservation-service.ts` para normalizar con `.trim()` las cadenas `startTime` y `endTime` antes de persistirlas en SQLite, evitando que espacios periféricos queden grabados en disco.
+- **Evidencia verificable:** [`src/domain/reservation.ts`](../src/domain/reservation.ts), [`src/services/reservation-service.ts`](../src/services/reservation-service.ts), [`tests/reservation-creation.test.ts`](../tests/reservation-creation.test.ts), [`tests/reservation-cancellation.test.ts`](../tests/reservation-cancellation.test.ts) y [`tests/persistence-restart.test.ts`](../tests/persistence-restart.test.ts).
+
+#### Episodio 3: Delegación en `web-fullstack-agent` para Servidor HTTP REST e Interfaz Web Local (`TICKET-04`)
+- **Objetivo y requisito:** Construir el servidor HTTP nativo (`src/app.ts` y `src/server.ts`), exponer los endpoints REST de inventario, disponibilidad, reservas, cancelación y reinicio, crear la UI web en `src/public/` y verificar mediante pruebas de integración HTTP (`tests/api-server.test.ts`).
+- **Contexto suministrado e instrucción:** Tabla de endpoints de la Sección 6 de `docs/especificacion-diseno.md` y contrato de `ReservationService`.
+- **Acción/resultado del agente:** Implementó `src/app.ts`, `src/server.ts`, `src/public/index.html`, `src/public/styles.css`, `src/public/app.js` y 6 tests de integración HTTP en `tests/api-server.test.ts`.
+- **Decisión humana / del arquitecto:** Se aceptó la solución validando que `POST /api/reservations` y `GET /api/availability` admitan tanto `{ startTime, endTime }` como el alias `{ start, end }`, garantizando compatibilidad total entre la especificación inicial, la UI y los clientes HTTP.
+- **Evidencia verificable:** [`src/app.ts`](../src/app.ts), [`src/server.ts`](../src/server.ts), [`src/public/index.html`](../src/public/index.html) y [`tests/api-server.test.ts`](../tests/api-server.test.ts).

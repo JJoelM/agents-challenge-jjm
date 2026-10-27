@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Reservas de Laboratorio</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="container header-content">
+      <div class="brand">
+        <span class="brand-badge">LAB-SYS</span>
+        <div>
+          <h1>Coordinación de Laboratorio de Precisión</h1>
+          <p class="subtitle">Gestión determinista de préstamos, disponibilidad e historial de equipos</p>
+        </div>
+      </div>
+      <div class="header-actions">
+        <span id="system-status" class="status-pill status-online" role="status">
+          <span class="dot"></span> SQLite Persistente Activo
+        </span>
+        <button id="btn-refresh" type="button" class="btn btn-secondary">
+          Actualizar datos
+        </button>
+        <button id="btn-reset-db" type="button" class="btn btn-danger-outline" title="Elimina todas las reservas de prueba">
+          Reiniciar BD
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container main-layout">
+    <!-- Catálogo de Inventario Precargado -->
+    <section class="card inventory-section" aria-labelledby="inventory-heading">
+      <div class="section-header">
+        <div>
+          <h2 id="inventory-heading">Catálogo de Equipos del Laboratorio</h2>
+          <p class="section-desc">Inventario fijo de unidades físicas independientes. Haga clic en una unidad para seleccionarla en los formularios.</p>
+        </div>
+        <span class="badge-count" id="inventory-count">5 unidades</span>
+      </div>
+      <div id="inventory-grid" class="inventory-grid" role="list">
+        <!-- Renderizado dinámicamente por app.js -->
+      </div>
+    </section>
+
+    <!-- Paneles Operativos: Disponibilidad y Nueva Reserva -->
+    <div class="operations-grid">
+      <!-- Panel 1: Consulta de Disponibilidad -->
+      <section class="card" aria-labelledby="availability-heading">
+        <div class="section-header">
+          <div>
+            <h2 id="availability-heading">Consulta de Disponibilidad</h2>
+            <p class="section-desc">Verifique si una unidad física está libre en un intervalo semiabierto <code>[inicio, fin)</code>.</p>
+          </div>
+        </div>
+
+        <form id="form-availability" class="form-stack">
+          <div class="form-group">
+            <label for="avail-unit">Unidad de Equipo</label>
+            <select id="avail-unit" name="unitId" required></select>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="avail-start">Inicio del turno</label>
+              <input type="datetime-local" id="avail-start" name="start" required />
+            </div>
+            <div class="form-group">
+              <label for="avail-end">Fin del turno</label>
+              <input type="datetime-local" id="avail-end" name="end" required />
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Consultar Disponibilidad</button>
+            <button type="button" id="btn-copy-to-reserve" class="btn btn-secondary">Usar este horario para reservar</button>
+          </div>
+        </form>
+
+        <div id="availability-feedback" class="feedback-box hidden" role="region" aria-live="polite"></div>
+      </section>
+
+      <!-- Panel 2: Nueva Reserva -->
+      <section class="card" aria-labelledby="reservation-heading">
+        <div class="section-header">
+          <div>
+            <h2 id="reservation-heading">Registrar Nueva Reserva</h2>
+            <p class="section-desc">Asigne una unidad a un solicitante. Duración permitida: entre 15 minutos y 24 horas.</p>
+          </div>
+        </div>
+
+        <div class="quick-presets">
+          <span class="preset-label">Autocompletar ejemplo:</span>
+          <button type="button" class="btn-chip" data-preset="1">Dra. García (10:00 - 11:00)</button>
+          <button type="button" class="btn-chip" data-preset="2">Ing. Pérez (11:00 - 12:00 Consecutivo)</button>
+          <button type="button" class="btn-chip" data-preset="3">Dr. López (10:30 - 11:30 Conflicto)</button>
+        </div>
+
+        <form id="form-reservation" class="form-stack">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="res-unit">Unidad de Equipo</label>
+              <select id="res-unit" name="unitId" required></select>
+            </div>
+            <div class="form-group">
+              <label for="res-requester">Solicitante (investigador / docente)</label>
+              <input
+                type="text"
+                id="res-requester"
+                name="requester"
+                placeholder="Ej. Dra. Ana García"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="res-start">Inicio de reserva</label>
+              <input type="datetime-local" id="res-start" name="startTime" required />
+            </div>
+            <div class="form-group">
+              <label for="res-end">Fin de reserva</label>
+              <input type="datetime-local" id="res-end" name="endTime" required />
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" class="btn btn-success">Confirmar Reserva</button>
+          </div>
+        </form>
+
+        <div id="reservation-feedback" class="feedback-box hidden" role="alert" aria-live="assertive"></div>
+      </section>
+    </div>
+
+    <!-- Tabla de Historial y Trazabilidad -->
+    <section class="card history-section" aria-labelledby="history-heading">
+      <div class="section-header history-header">
+        <div>
+          <h2 id="history-heading">Historial y Trazabilidad de Reservas</h2>
+          <p class="section-desc">Registro persistente de reservas activas y canceladas. Cancelar libera inmediatamente el intervalo horario conservando el registro histórico.</p>
+        </div>
+
+        <div class="filters-bar">
+          <div class="filter-item">
+            <label for="filter-unit">Filtrar por unidad:</label>
+            <select id="filter-unit">
+              <option value="">Todas las unidades</option>
+            </select>
+          </div>
+          <div class="filter-item">
+            <label for="filter-status">Estado:</label>
+            <select id="filter-status">
+              <option value="">Todas (Activas y Canceladas)</option>
+              <option value="ACTIVE">Solo Activas (ACTIVE)</option>
+              <option value="CANCELLED">Solo Canceladas (CANCELLED)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div id="table-feedback" class="feedback-box hidden" role="status" aria-live="polite"></div>
+
+      <div class="table-container">
+        <table class="reservations-table" aria-label="Tabla histórica de reservas">
+          <thead>
+            <tr>
+              <th scope="col">ID</th>
+              <th scope="col">Unidad</th>
+              <th scope="col">Solicitante</th>
+              <th scope="col">Inicio</th>
+              <th scope="col">Fin</th>
+              <th scope="col">Estado</th>
+              <th scope="col" class="col-actions">Acción</th>
+            </tr>
+          </thead>
+          <tbody id="reservations-tbody">
+            <tr>
+              <td colspan="7" class="empty-row">Cargando reservas...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <div class="container footer-content">
+      <span>Sistema de Reservas para Laboratorio con Agentes — Arquitectura Determinista TypeScript + SQLite</span>
+      <span>Intervalos semiabiertos <code>[inicio, fin)</code> | IDs correlativos <code>RES-xxx</code></span>
+    </div>
+  </footer>
+
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
