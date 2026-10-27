@@ -103,7 +103,7 @@ Este sistema resuelve el problema proporcionando validación estricta de interva
 ### 2.2 Decisiones técnicas, requisitos previos y versiones
 - **Lenguaje y Runtime:** TypeScript `^5.7.2` ejecutado sobre **Node.js `v24.14.0`** (compatible con Node.js `>= 22.5.0`, que incluye el módulo nativo `node:sqlite`).
 - **Cero dependencias externas de producción:** El servidor HTTP utiliza `node:http` nativo, la persistencia utiliza `node:sqlite` (`DatabaseSync`) nativo y el frontend está construido en HTML5, CSS3 y JavaScript Vanilla. Esto elimina fallos de compilación nativa (`node-gyp`) y garantiza portabilidad inmediata.
-- **Motor de pruebas y ejecución:** **Vitest `^2.1.8`** para pruebas automatizadas y **tsx `^4.19.2`** para ejecución directa de TypeScript.
+- **Motor de pruebas y ejecución:** **Vitest `^5.0.5`** para pruebas automatizadas y **tsx `^4.19.2`** para ejecución directa de TypeScript.
 
 ### 2.3 Instalación, carga inicial, persistencia y reinicio de datos
 
@@ -278,7 +278,7 @@ Siguiendo las buenas prácticas de ingeniería asistida por agentes, ningún res
 | :--- | :--- | :--- |
 | **Entorno Node.js** | Compatible con `node:sqlite` | Ejecutado `node -v` -> **`v24.14.0`** (Windows PowerShell) |
 | **Chequeo de tipos TypeScript** | Sin errores de compilación | Ejecutado `npx tsc --noEmit` -> **Exit Code 0 (0 errores)** |
-| **Suite de pruebas Vitest** | Suites unitarias, API y persistencia en verde | Ejecutado `npm test` (`vitest run v2.1.8`) -> **5 Test Files passed (5), 33 Tests passed (33), 0 failed** |
+| **Suite de pruebas Vitest** | Suites unitarias, API y persistencia en verde | Ejecutado `npm test` (`vitest run v5.0.5`) -> **5 Test Files passed (5), 33 Tests passed (33), 0 failed** |
 | **Script de reinicio de BD** | Reinicia `data/reservations.db` | Ejecutado `npm run db:reset` -> Base `data/reservations.db` inicializada y limpia con 0 reservas |
 
 ### 2.8 Pendientes y limitaciones conocidas
